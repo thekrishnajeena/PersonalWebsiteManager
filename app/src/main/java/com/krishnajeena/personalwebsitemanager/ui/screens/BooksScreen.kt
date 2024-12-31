@@ -1,7 +1,7 @@
 package com.krishnajeena.personalwebsitemanager.ui.screens
 
-import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,21 +11,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.FloatingActionButton
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.rememberModalBottomSheetState
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,15 +34,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.krishnajeena.personalwebsitemanager.R
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,7 +80,8 @@ fun BooksScreen(
                 Column(
                     modifier = Modifier
                         .padding(16.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()), // Enable scrolling if the content is larger
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(book["title"] as String, style = MaterialTheme.typography.headlineMedium)
@@ -103,8 +102,7 @@ fun BooksScreen(
             if (books.value.isEmpty()) {
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -115,42 +113,72 @@ fun BooksScreen(
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     items(books.value) { book ->
                         val coverUrl = book["cover"]
+BookCard(bookTitle = book["title"] as String, bookCoverUrl = coverUrl.toString(), bookStatus = book["status"] as String
 
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .clickable {
-                                    selectedBook = book
-                                    coroutineScope.launch { sheetState.show() }
-                                },
-                            elevation = CardDefaults.cardElevation()
-                        ) {
-                            // Image of the book cover
-                            Log.i("COVER:::", coverUrl.toString())
-                            coverUrl.let {
-                                Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
-                                    AsyncImage(
-                                        model = it.toString(),
-                                        contentDescription = "Book Cover",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop,
-                                        placeholder = painterResource(id = R.drawable.ic_launcher_foreground), // Add a placeholder image if needed
-                                        error = painterResource(id = R.drawable.ic_launcher_foreground) // Add an error image if the URL fails
-                                    )
-                                }
-                            }
-                        }
+
+) {
+    selectedBook = book
+    coroutineScope.launch { sheetState.show() }
+
+
+}
+
+
                     }
                 }
             }
         }
+    }
 
+}
+
+@Composable
+fun BookCard(
+    bookTitle: String,
+    bookCoverUrl: String,
+    bookStatus: String,
+    function: () -> Job
+) {
+    Box(
+        modifier = Modifier
+            .width(130.dp)
+            .height(220.dp)
+            .padding(8.dp).clickable{function.invoke()}
+
+    ) {
+        // Book Cover
+        AsyncImage(
+            model = bookCoverUrl,
+            contentDescription = "Book Cover",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(8.dp))
+        )
+
+        // Status Overlay
+        if (bookStatus.isNotEmpty()) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(4.dp)
+                    .background(if(bookStatus=="Read")Color.Green
+                    else Color(0xAA000000), shape = RoundedCornerShape(16.dp))
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = bookStatus,
+                    fontSize = 14.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
     }
 }
+

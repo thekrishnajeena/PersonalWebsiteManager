@@ -5,6 +5,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,7 +50,8 @@ fun AddBooksScreen(onBookAdded: (Book) -> Unit = {}, navController: NavControlle
     val id = remember { System.currentTimeMillis().toInt() } // Auto-generated ID based on timestamp
     var title by remember { mutableStateOf("") }
     var cover by remember { mutableStateOf("") }
-    var status by remember { mutableStateOf("Reading") }
+    var status by remember { mutableStateOf("Status") }
+
     var summary by remember { mutableStateOf("") }
     var keyTakeaways by remember { mutableStateOf("") }
     var lessons by remember { mutableStateOf("") }
@@ -106,6 +108,7 @@ fun AddBooksScreen(onBookAdded: (Book) -> Unit = {}, navController: NavControlle
 
         // Status Dropdown
         var expanded by remember { mutableStateOf(false) }
+
         OutlinedTextField(
             value = status,
             onValueChange = {},
@@ -113,32 +116,41 @@ fun AddBooksScreen(onBookAdded: (Book) -> Unit = {}, navController: NavControlle
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
-                Icon(Icons.Default.ArrowDropDown, contentDescription = "Expand")
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    contentDescription = "Expand",
+                    modifier = Modifier.clickable { expanded = !expanded } // Toggle dropdown on click
+                )
             },
-            readOnly = true,
+            readOnly = true, // Prevent manual typing
             enabled = true
         )
+
+        // Dropdown menu
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false } // Close dropdown when clicking outside
         ) {
             DropdownMenuItem(
                 onClick = {
-                    status = "Reading"
-                    expanded = true
-                }, text = {
+                    status = "Reading" // Update status
+                    expanded = false // Close the dropdown
+                },
+                text = {
                     Text("Reading")
                 }
             )
             DropdownMenuItem(
                 onClick = {
-                    status = "Read"
-                    expanded = true
-                }, text = {
+                    status = "Read" // Update status
+                    expanded = false // Close the dropdown
+                },
+                text = {
                     Text("Read")
                 }
             )
         }
+
 
         // Summary TextArea
         OutlinedTextField(
